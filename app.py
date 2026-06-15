@@ -5,6 +5,9 @@ import uuid
 app = Flask(__name__)
 app.secret_key = "sgm-municipalidad-guatemala-2026"
 
+if __name__ == '__main__':
+    app.run(debug=True)
+
 # ── Datos en memoria (persisten durante la sesión del servidor) ────────────────
 USERS = {
     "ciudadano@gmail.com":  {"password":"1234","role":"ciudadano",  "name":"María González",      "dpi":"2456789012345","activo":True},
