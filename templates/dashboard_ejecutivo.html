@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Ejecutivo – SGM{% endblock %}
+{% block page_title %}Dashboard Ejecutivo{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-title">Dashboard Ejecutivo</h1><p class="page-sub">Indicadores de gestión municipal en tiempo real – Junio 2026</p></div>
+  <a href="{{ url_for('reportes') }}" class="btn btn-primary">📊 Ver Reportes</a>
+</div>
+<div class="kpi-grid kpi-grid-6">
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">📋</div><div class="kpi-info"><span class="kpi-value">{{ kpi.tramites_hoy }}</span><span class="kpi-label">Trámites Hoy</span></div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">📅</div><div class="kpi-info"><span class="kpi-value">{{ kpi.tramites_mes }}</span><span class="kpi-label">Trámites Mes</span></div></div>
+  <div class="kpi-card kpi-gold"><div class="kpi-icon">💰</div><div class="kpi-info"><span class="kpi-value">Q {{ "{:,.0f}".format(kpi.ingresos_mes) }}</span><span class="kpi-label">Ingresos Mes</span></div></div>
+  <div class="kpi-card kpi-purple"><div class="kpi-icon">⏱️</div><div class="kpi-info"><span class="kpi-value">{{ kpi.tiempo_promedio }}d</span><span class="kpi-label">Tiempo Promedio</span></div></div>
+  <div class="kpi-card kpi-teal"><div class="kpi-icon">😊</div><div class="kpi-info"><span class="kpi-value">{{ kpi.satisfaccion }}</span><span class="kpi-label">SUS Score</span></div></div>
+  <div class="kpi-card kpi-orange"><div class="kpi-icon">⚠️</div><div class="kpi-info"><span class="kpi-value">{{ kpi.pendientes }}</span><span class="kpi-label">Pendientes</span></div></div>
+</div>
+<div class="charts-row">
+  <div class="chart-card"><h4 class="chart-title">Ingresos Mensuales (Q)</h4><canvas id="chartIngresos" height="220"></canvas></div>
+  <div class="chart-card"><h4 class="chart-title">Trámites por Estado</h4><canvas id="chartEstados" height="220"></canvas></div>
+  <div class="chart-card"><h4 class="chart-title">Trámites por Tipo</h4><canvas id="chartTipos" height="220"></canvas></div>
+</div>
+<div class="section-card">
+  <div class="section-card-header"><h3>Ejecución Presupuestal</h3><a href="{{ url_for('presupuesto') }}" class="btn btn-sm btn-outline">Ver Detalle</a></div>
+  {% for p in presupuesto %}
+  <div class="budget-row">
+    <div class="budget-label">{{ p.partida }}</div>
+    <div class="budget-bar-wrap"><div class="budget-bar" style="width:{{ p.pct }}%;background:{% if p.pct > 80 %}var(--danger){% elif p.pct > 60 %}var(--warning){% else %}var(--success){% endif %}"></div></div>
+    <div class="budget-pct {% if p.pct > 80 %}text-danger{% endif %}">{{ p.pct }}%</div>
+    <div class="budget-monto">Q {{ "{:,}".format(p.ejecutado) }} / Q {{ "{:,}".format(p.asignado) }}</div>
+  </div>
+  {% endfor %}
+</div>
+<div class="section-card">
+  <div class="section-card-header"><h3>Expedientes Recientes</h3><a href="{{ url_for('mis_solicitudes') }}" class="btn btn-sm btn-outline">Ver todos</a></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Tipo</th><th>Ciudadano</th><th>Fecha</th><th>Estado</th><th>Monto</th></tr></thead>
+      <tbody>
+        {% for s in solicitudes[:6] %}
+        <tr><td><code>{{ s.id }}</code></td><td>{{ s.tipo }}</td><td>{{ s.ciudadano }}</td><td>{{ s.fecha }}</td><td><span class="badge badge-{{ s.estado|lower|replace(' ','-') }}">{{ s.estado }}</span></td><td>Q {{ "%.2f"|format(s.monto) }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+fetch('/api/ingresos-mensuales').then(r=>r.json()).then(d=>{new Chart(document.getElementById('chartIngresos'),{type:'line',data:{labels:d.labels,datasets:[{label:'Ingresos (Q)',data:d.data,borderColor:'#2E75B6',backgroundColor:'rgba(46,117,182,0.12)',tension:0.4,fill:true}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'Q '+v.toLocaleString()}}}}})});
+fetch('/api/solicitudes-por-estado').then(r=>r.json()).then(d=>{new Chart(document.getElementById('chartEstados'),{type:'doughnut',data:{labels:d.labels,datasets:[{data:d.data,backgroundColor:['#ED7D31','#2E75B6','#70AD47','#FF4444']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}})});
+fetch('/api/solicitudes-por-tipo').then(r=>r.json()).then(d=>{new Chart(document.getElementById('chartTipos'),{type:'bar',data:{labels:d.labels,datasets:[{label:'Trámites',data:d.data,backgroundColor:'#2E75B6',borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{maxRotation:30,font:{size:10}}}}}})});
+</script>
+{% endblock %}

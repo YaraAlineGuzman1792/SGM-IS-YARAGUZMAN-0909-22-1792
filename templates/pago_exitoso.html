@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Pago Exitoso – SGM{% endblock %}
+{% block page_title %}Pago Completado{% endblock %}
+{% block content %}
+<div class="confirm-wrap"><div class="confirm-card">
+  <div class="confirm-icon">💳</div>
+  <h2>¡Pago Procesado Exitosamente!</h2>
+  <p class="confirm-sub">El recibo fue enviado a <strong>{{ session.user }}</strong>.</p>
+  <div class="confirm-exp">
+    <span class="exp-label">Referencia de Pago</span>
+    <span class="exp-id">PAY-{{ pago.id }}-2026</span>
+  </div>
+  <div class="receipt-mini">
+    <div class="receipt-row"><span>Expediente:</span><strong>{{ pago.id }}</strong></div>
+    <div class="receipt-row"><span>Trámite:</span><strong>{{ pago.tipo }}</strong></div>
+    <div class="receipt-row"><span>Monto pagado:</span><strong>Q {{ "%.2f"|format(pago.monto) }}</strong></div>
+    <div class="receipt-row"><span>Estado:</span><strong style="color:var(--success)">✓ Completado</strong></div>
+  </div>
+  <div class="confirm-actions">
+    <a href="{{ url_for('mis_solicitudes') }}" class="btn btn-outline">Ver Mis Solicitudes</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Ir al Inicio</a>
+  </div>
+</div></div>
+{% endblock %}

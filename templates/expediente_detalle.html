@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Expediente {{ sol.id }} – SGM{% endblock %}
+{% block page_title %}Detalle del Expediente{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Expediente <code>{{ sol.id }}</code></h1><p class="page-sub">{{ sol.tipo }} – {{ sol.ciudadano }}</p></div><a href="{{ url_for('mis_solicitudes') }}" class="btn btn-outline">← Volver</a></div>
+<div class="detail-layout">
+  <div class="detail-main">
+    <div class="section-card">
+      <h3 class="section-card-title">Información del Trámite</h3>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Expediente</span><span class="detail-value"><code>{{ sol.id }}</code></span></div>
+        <div class="detail-item"><span class="detail-label">Tipo</span><span class="detail-value">{{ sol.tipo }}</span></div>
+        <div class="detail-item"><span class="detail-label">Ciudadano</span><span class="detail-value">{{ sol.ciudadano }}</span></div>
+        <div class="detail-item"><span class="detail-label">Fecha</span><span class="detail-value">{{ sol.fecha }}</span></div>
+        <div class="detail-item"><span class="detail-label">Estado</span><span class="detail-value"><span class="badge badge-{{ sol.estado|lower|replace(' ','-') }}">{{ sol.estado }}</span></span></div>
+        <div class="detail-item"><span class="detail-label">Monto</span><span class="detail-value">Q {{ "%.2f"|format(sol.monto) }}</span></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <h3 class="section-card-title">Historial</h3>
+      <div class="timeline">
+        <div class="tl-item done"><div class="tl-dot"></div><div class="tl-body"><strong>Solicitud creada</strong><span class="tl-date">{{ sol.fecha }} – 09:00 hrs</span><p>El ciudadano {{ sol.ciudadano }} envió la solicitud.</p></div></div>
+        {% if sol.estado != 'Pendiente' %}
+        <div class="tl-item done"><div class="tl-dot"></div><div class="tl-body"><strong>Asignado a Funcionario</strong><span class="tl-date">{{ sol.fecha }} – 10:30 hrs</span><p>Asignado a Lic. María Cifuentes – Urbanismo.</p></div></div>
+        {% endif %}
+        {% if sol.estado in ['En Revisión','Aprobado','Rechazado'] %}
+        <div class="tl-item {% if sol.estado != 'En Revisión' %}done{% else %}active{% endif %}"><div class="tl-dot"></div><div class="tl-body"><strong>En Revisión</strong><span class="tl-date">{{ sol.fecha }} – 14:00 hrs</span><p>El funcionario revisa los documentos adjuntos.</p></div></div>
+        {% endif %}
+        {% if sol.estado == 'Aprobado' %}<div class="tl-item done"><div class="tl-dot tl-dot-green"></div><div class="tl-body"><strong>Aprobado ✅</strong><span class="tl-date">+2 días</span><p>Resolución favorable. Proceda con el pago.</p></div></div>
+        {% elif sol.estado == 'Rechazado' %}<div class="tl-item"><div class="tl-dot tl-dot-red"></div><div class="tl-body"><strong>Rechazado ❌</strong><span class="tl-date">+1 día</span><p>Motivo: Documentación incompleta. Reingrese con todos los documentos.</p></div></div>{% endif %}
+      </div>
+    </div>
+    <div class="section-card">
+      <h3 class="section-card-title">Documentos Adjuntos</h3>
+      <div class="docs-list">
+        <div class="doc-row"><span>📄 DPI_copia.pdf</span><span class="doc-size">245 KB</span><span class="badge badge-aprobado">Validado</span></div>
+        <div class="doc-row"><span>🗺️ plano_ubicacion.pdf</span><span class="doc-size">1.2 MB</span><span class="badge badge-aprobado">Validado</span></div>
+        <div class="doc-row"><span>📋 formulario_municipal.pdf</span><span class="doc-size">380 KB</span><span class="badge badge-en-revisión">En revisión</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="detail-sidebar">
+    <div class="summary-card">
+      <h4>Acciones</h4>
+      {% if not sol.pagado and sol.estado == 'Aprobado' %}<a href="{{ url_for('pagos') }}" class="btn btn-primary btn-block">💳 Pagar Ahora</a>{% endif %}
+      <button class="btn btn-outline btn-block" onclick="showToast('📧 Notificación enviada','success')">📧 Reenviar Notificación</button>
+      <button class="btn btn-outline btn-block" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+    <div class="help-card">
+      <h4>Estado actual</h4>
+      <div class="state-indicator state-{{ sol.estado|lower|replace(' ','-') }}"><span class="state-dot"></span>{{ sol.estado }}</div>
+      <p class="help-text">Tiempo estimado: <strong>2–3 días hábiles</strong></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{% block title %}SGM – Municipalidad de Guatemala{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% block head %}{% endblock %}
+</head>
+<body>
+{% if session.user %}
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🏛️</div>
+    <div class="brand-text"><span class="brand-title">SGM</span><span class="brand-sub">Municipalidad GT</span></div>
+  </div>
+  <nav class="sidebar-nav">
+
+    {# ── CIUDADANO ── #}
+    {% if session.role == 'ciudadano' %}
+    <div class="nav-section-label">PORTAL CIUDADANO</div>
+    <a href="{{ url_for('dashboard') }}"      class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}"><span class="nav-icon">⊞</span><span class="nav-label">Inicio</span></a>
+    <a href="{{ url_for('tramites') }}"       class="nav-item {% if request.endpoint=='tramites' %}active{% endif %}"><span class="nav-icon">📋</span><span class="nav-label">Trámites</span></a>
+    <a href="{{ url_for('mis_solicitudes') }}" class="nav-item {% if request.endpoint=='mis_solicitudes' %}active{% endif %}"><span class="nav-icon">📁</span><span class="nav-label">Mis Solicitudes</span></a>
+    <a href="{{ url_for('pagos') }}"          class="nav-item {% if 'pago' in request.endpoint %}active{% endif %}"><span class="nav-icon">💳</span><span class="nav-label">Pagos</span></a>
+    {% endif %}
+
+    {# ── FUNCIONARIO ── #}
+    {% if session.role == 'funcionario' %}
+    <div class="nav-section-label">GESTIÓN DE EXPEDIENTES</div>
+    <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}"><span class="nav-icon">⊞</span><span class="nav-label">Mis Expedientes</span></a>
+    {% endif %}
+
+    {# ── ADMIN ── #}
+    {% if session.role == 'admin' %}
+    <div class="nav-section-label">ADMINISTRACIÓN</div>
+    <a href="{{ url_for('dashboard') }}"  class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}"><span class="nav-icon">⊞</span><span class="nav-label">Inicio</span></a>
+    <a href="{{ url_for('usuarios') }}"   class="nav-item {% if request.endpoint=='usuarios' %}active{% endif %}"><span class="nav-icon">👥</span><span class="nav-label">Usuarios</span></a>
+    <a href="{{ url_for('auditoria') }}"  class="nav-item {% if request.endpoint=='auditoria' %}active{% endif %}"><span class="nav-icon">🔍</span><span class="nav-label">Auditoría</span></a>
+    {% endif %}
+
+    {# ── DIRECTOR ── #}
+    {% if session.role == 'director' %}
+    <div class="nav-section-label">DIRECCIÓN EJECUTIVA</div>
+    <a href="{{ url_for('dashboard') }}"   class="nav-item {% if request.endpoint=='dashboard' %}active{% endif %}"><span class="nav-icon">⊞</span><span class="nav-label">Dashboard</span></a>
+    <a href="{{ url_for('reportes') }}"    class="nav-item {% if request.endpoint=='reportes' %}active{% endif %}"><span class="nav-icon">📊</span><span class="nav-label">Reportes</span></a>
+    <a href="{{ url_for('presupuesto') }}" class="nav-item {% if request.endpoint=='presupuesto' %}active{% endif %}"><span class="nav-icon">💰</span><span class="nav-label">Presupuesto</span></a>
+    <a href="{{ url_for('auditoria') }}"   class="nav-item {% if request.endpoint=='auditoria' %}active{% endif %}"><span class="nav-icon">🔍</span><span class="nav-label">Auditoría</span></a>
+    {% endif %}
+
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="user-avatar">{{ session.name[0] }}</div>
+      <div class="user-info"><span class="user-name">{{ session.name }}</span><span class="user-role role-{{ session.role }}">{{ session.role|capitalize }}</span></div>
+    </div>
+    <a href="{{ url_for('logout') }}" class="logout-btn" title="Cerrar sesión">⏻</a>
+  </div>
+</aside>
+
+<div class="topbar">
+  <button class="topbar-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+  <div class="topbar-right">
+    <div class="notif-btn">🔔<span class="notif-badge">3</span></div>
+    <span class="topbar-user">{{ session.name }}</span>
+  </div>
+</div>
+
+<main class="main-content">
+  {% with messages=get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="{{ url_for('static',filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

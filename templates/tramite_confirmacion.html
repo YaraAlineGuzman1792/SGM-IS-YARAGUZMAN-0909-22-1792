@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Solicitud Enviada – SGM{% endblock %}
+{% block page_title %}Confirmación{% endblock %}
+{% block content %}
+<div class="confirm-wrap"><div class="confirm-card">
+  <div class="confirm-icon">✅</div>
+  <h2>¡Solicitud Enviada Exitosamente!</h2>
+  <p class="confirm-sub">Tu expediente ha sido creado y asignado a un funcionario municipal.</p>
+  <div class="confirm-exp"><span class="exp-label">Número de Expediente</span><span class="exp-id">{{ exp_id }}</span></div>
+  <div class="confirm-steps">
+    <div class="cs-item done">✓ Solicitud recibida</div>
+    <div class="cs-item active">⏳ En revisión</div>
+    <div class="cs-item">📋 Resolución</div>
+    <div class="cs-item">💳 Pago</div>
+  </div>
+  <p class="confirm-note">📧 Recibirás notificaciones al correo <strong>{{ session.user }}</strong>.</p>
+  <div class="confirm-actions"><a href="{{ url_for('mis_solicitudes') }}" class="btn btn-outline">Ver Mis Solicitudes</a><a href="{{ url_for('tramites') }}" class="btn btn-primary">Nuevo Trámite</a></div>
+</div></div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Panel Administrador – SGM{% endblock %}
+{% block page_title %}Panel de Administración{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Panel de Administración</h1>
+    <p class="page-sub">Gestión de usuarios del sistema y bitácora de auditoría</p>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">👥</div><div class="kpi-info"><span class="kpi-value">{{ users|length }}</span><span class="kpi-label">Total Usuarios</span></div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">✅</div><div class="kpi-info"><span class="kpi-value">{{ users|selectattr('activo','eq',True)|list|length }}</span><span class="kpi-label">Activos</span></div></div>
+  <div class="kpi-card kpi-orange"><div class="kpi-icon">🚫</div><div class="kpi-info"><span class="kpi-value">{{ users|selectattr('activo','eq',False)|list|length }}</span><span class="kpi-label">Inactivos</span></div></div>
+  <div class="kpi-card kpi-purple"><div class="kpi-icon">📝</div><div class="kpi-info"><span class="kpi-value">{{ logs|length }}</span><span class="kpi-label">Acciones Recientes</span></div></div>
+</div>
+
+<div class="admin-layout">
+  <!-- Panel izquierdo: Usuarios -->
+  <div>
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3>Gestión de Usuarios</h3>
+        <button class="btn btn-sm btn-primary" onclick="document.getElementById('modalNuevo').style.display='flex'">+ Nuevo</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            {% for u in users %}
+            <tr class="{% if not u.activo %}row-inactivo{% endif %}">
+              <td><div class="user-cell"><div class="user-avatar-sm">{{ u.name[0] }}</div><span>{{ u.name }}</span></div></td>
+              <td>{{ u.email }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('cambiar_rol') }}" style="display:inline">
+                  <input type="hidden" name="email" value="{{ u.email }}"/>
+                  <select name="rol" class="rol-select" onchange="this.form.submit()" {% if u.email == session.user %}disabled{% endif %}>
+                    {% for r in ['ciudadano','funcionario','admin','director'] %}
+                    <option value="{{ r }}" {% if u.role == r %}selected{% endif %}>{{ r|capitalize }}</option>
+                    {% endfor %}
+                  </select>
+                </form>
+              </td>
+              <td>
+                {% if u.activo %}
+                  <span class="badge badge-aprobado">Activo</span>
+                {% else %}
+                  <span class="badge badge-rechazado">Inactivo</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.email != session.user %}
+                <a href="{{ url_for('usuario_toggle', email=u.email) }}"
+                   class="btn btn-xs {% if u.activo %}btn-danger{% else %}btn-success{% endif %}"
+                   onclick="return confirm('¿Confirma esta acción?')">
+                  {% if u.activo %}Desactivar{% else %}Activar{% endif %}
+                </a>
+                {% else %}
+                <span class="text-muted" style="font-size:12px">Tu cuenta</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel derecho: Auditoría reciente -->
+  <div>
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3>Actividad Reciente</h3>
+        <a href="{{ url_for('auditoria') }}" class="btn btn-sm btn-outline">Ver toda</a>
+      </div>
+      {% for log in logs %}
+      <div class="audit-item">
+        <div class="audit-icon">📝</div>
+        <div class="audit-body">
+          <strong>{{ log.accion }}</strong>
+          <span>{{ log.usuario }} · {{ log.fecha }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal nuevo usuario -->
+<div class="modal-overlay" id="modalNuevo" style="display:none">
+  <div class="modal-box">
+    <h3>Crear Nuevo Usuario</h3>
+    <form method="POST" action="{{ url_for('usuario_nuevo') }}">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Nombre Completo *</label><input name="nombre" class="form-input" placeholder="Nombre completo" required/></div>
+        <div class="form-group"><label class="form-label">Correo Electrónico *</label><input type="email" name="email" class="form-input" placeholder="correo@municipalidad.gt" required/></div>
+        <div class="form-group"><label class="form-label">Rol *</label>
+          <select name="rol" class="form-input">
+            <option value="ciudadano">Ciudadano</option>
+            <option value="funcionario">Funcionario</option>
+            <option value="admin">Administrador</option>
+            <option value="director">Director</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Departamento</label><input name="depto" class="form-input" placeholder="Ej: Urbanismo"/></div>
+        <div class="form-group form-full"><label class="form-label">Contraseña Temporal *</label><input type="password" name="password" class="form-input" placeholder="Mínimo 6 caracteres" required/></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('modalNuevo').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Crear Usuario</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

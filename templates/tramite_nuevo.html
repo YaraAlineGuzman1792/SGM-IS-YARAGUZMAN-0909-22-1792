@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Trámite – SGM{% endblock %}
+{% block page_title %}Nueva Solicitud{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-title">Nueva Solicitud de Trámite</h1><p class="page-sub">Complete el formulario para iniciar su expediente</p></div>
+  <a href="{{ url_for('tramites') }}" class="btn btn-outline">← Volver</a>
+</div>
+
+<!-- Stepper: solo 3 pasos reales -->
+<div class="stepper">
+  <div class="step active"><span class="step-num">1</span><span class="step-label">Tipo</span></div>
+  <div class="step-line active-line"></div>
+  <div class="step" id="stepDatos"><span class="step-num">2</span><span class="step-label">Datos y Documentos</span></div>
+  <div class="step-line"></div>
+  <div class="step" id="stepConfirm"><span class="step-num">3</span><span class="step-label">Confirmación</span></div>
+</div>
+
+<div class="form-layout">
+  <form method="POST" action="{{ url_for('tramite_nuevo') }}" id="tramiteForm" enctype="multipart/form-data">
+
+    <!-- PASO 1: Tipo -->
+    <div class="section-card" id="panelTipo">
+      <h3 class="section-card-title">1. Selecciona el Tipo de Trámite</h3>
+      <div class="tramites-grid-mini">
+        {% for t in tipos %}
+        <label class="tipo-option" for="tipo_{{ t.id }}">
+          <input type="radio" name="tipo_id" id="tipo_{{ t.id }}" value="{{ t.id }}"
+            {% if t.id == tipo.id %}checked{% endif %}
+            onchange="updateTipo({{ t.id }}, '{{ t.icono }}', '{{ t.nombre }}', {{ t.costo }}, {{ t.dias }})"/>
+          <div class="tipo-card">
+            <div class="tipo-icon">{{ t.icono }}</div>
+            <div class="tipo-nombre">{{ t.nombre }}</div>
+            <div class="tipo-costo">Q {{ "%.2f"|format(t.costo) }}</div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="step-nav">
+        <button type="button" class="btn btn-primary" onclick="irPaso2()">Siguiente: Datos y Documentos →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: Datos + Documentos (oculto inicialmente) -->
+    <div class="section-card" id="panelDatos" style="display:none">
+      <h3 class="section-card-title">2. Datos del Solicitante y Documentos</h3>
+      <div class="form-grid" style="margin-bottom:24px">
+        <div class="form-group"><label class="form-label">Nombre Completo *</label><input type="text" name="nombre" class="form-input" value="{{ session.name }}" required/></div>
+        <div class="form-group"><label class="form-label">DPI / CUI *</label><input type="text" name="dpi" class="form-input" placeholder="0000 00000 0000" required/></div>
+        <div class="form-group"><label class="form-label">Correo Electrónico *</label><input type="email" name="email" class="form-input" value="{{ session.user }}" required/></div>
+        <div class="form-group"><label class="form-label">Teléfono *</label><input type="tel" name="telefono" class="form-input" placeholder="5000-0000" required/></div>
+        <div class="form-group form-full"><label class="form-label">Dirección *</label><input type="text" name="direccion" class="form-input" placeholder="Zona, calle y número" required/></div>
+        <div class="form-group form-full"><label class="form-label">Descripción / Justificación</label><textarea name="descripcion" class="form-input" rows="3" placeholder="Describa brevemente el motivo de su solicitud..."></textarea></div>
+      </div>
+
+      <h4 style="font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text)">Documentos Requeridos</h4>
+      <div class="doc-list">
+        <div class="doc-item">
+          <div class="doc-info"><span class="doc-icon">📄</span><span>DPI / Pasaporte (copia)</span><span class="doc-req">Requerido</span></div>
+          <div class="upload-zone" onclick="this.querySelector('input').click()">
+            <input type="file" name="doc_dpi" accept=".pdf,.jpg,.png" hidden onchange="previewFile(this,'prev_dpi')"/>
+            <span id="prev_dpi">📎 Seleccionar archivo</span>
+          </div>
+        </div>
+        <div class="doc-item">
+          <div class="doc-info"><span class="doc-icon">🗺️</span><span>Plano de ubicación</span><span class="doc-req">Requerido</span></div>
+          <div class="upload-zone" onclick="this.querySelector('input').click()">
+            <input type="file" name="doc_plano" accept=".pdf,.jpg,.png" hidden onchange="previewFile(this,'prev_plano')"/>
+            <span id="prev_plano">📎 Seleccionar archivo</span>
+          </div>
+        </div>
+        <div class="doc-item">
+          <div class="doc-info"><span class="doc-icon">📋</span><span>Formulario municipal firmado</span><span class="doc-opt">Opcional</span></div>
+          <div class="upload-zone" onclick="this.querySelector('input').click()">
+            <input type="file" name="doc_form" accept=".pdf,.jpg,.png" hidden onchange="previewFile(this,'prev_form')"/>
+            <span id="prev_form">📎 Seleccionar archivo</span>
+          </div>
+        </div>
+      </div>
+      <p class="doc-note">📌 Formatos: PDF, JPG, PNG. Máximo 10 MB por archivo.</p>
+
+      <div class="step-nav" style="justify-content:space-between">
+        <button type="button" class="btn btn-outline" onclick="irPaso1()">← Volver</button>
+        <button type="submit" class="btn btn-primary btn-lg">Enviar Solicitud ✓</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Sidebar resumen -->
+  <div class="form-sidebar">
+    <div class="summary-card">
+      <h4>Resumen del Trámite</h4>
+      <div class="summary-icon" id="sumIcon">{{ tipo.icono }}</div>
+      <div class="summary-nombre" id="sumNombre">{{ tipo.nombre }}</div>
+      <div class="summary-row"><span>Costo:</span><strong id="sumCosto">Q {{ "%.2f"|format(tipo.costo) }}</strong></div>
+      <div class="summary-row"><span>Tiempo:</span><strong id="sumDias">{{ tipo.dias }} días hábiles</strong></div>
+      <div class="summary-row"><span>Estado inicial:</span><strong>Pendiente</strong></div>
+      <hr/>
+      <div class="summary-total">Total: <strong id="sumTotal">Q {{ "%.2f"|format(tipo.costo) }}</strong></div>
+    </div>
+    <div class="help-card">
+      <h4>¿Necesitas ayuda?</h4>
+      <p>Llama al <strong>1521</strong> o escribe a<br/><a href="mailto:tramites@muniguate.com">tramites@muniguate.com</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const tipos = {{ tipos|tojson }};
+
+function irPaso2() {
+  document.getElementById('panelTipo').style.display = 'none';
+  document.getElementById('panelDatos').style.display = 'block';
+  document.getElementById('stepDatos').classList.add('active');
+  document.querySelector('.step-line').classList.add('active-line');
+}
+function irPaso1() {
+  document.getElementById('panelDatos').style.display = 'none';
+  document.getElementById('panelTipo').style.display = 'block';
+  document.getElementById('stepDatos').classList.remove('active');
+}
+function updateTipo(id, icono, nombre, costo, dias) {
+  document.getElementById('sumIcon').textContent   = icono;
+  document.getElementById('sumNombre').textContent = nombre;
+  document.getElementById('sumCosto').textContent  = 'Q ' + costo.toFixed(2);
+  document.getElementById('sumDias').textContent   = dias + ' días hábiles';
+  document.getElementById('sumTotal').textContent  = 'Q ' + costo.toFixed(2);
+}
+function previewFile(input, spanId) {
+  const span = document.getElementById(spanId);
+  if (input.files.length > 0) {
+    span.textContent = '✅ ' + input.files[0].name;
+    span.style.color = 'var(--success)';
+  }
+}
+</script>
+{% endblock %}

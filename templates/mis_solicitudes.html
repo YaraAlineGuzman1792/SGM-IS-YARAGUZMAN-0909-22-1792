@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Mis Solicitudes – SGM{% endblock %}
+{% block page_title %}Mis Solicitudes{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-title">Mis Solicitudes</h1><p class="page-sub">Historial de todos tus trámites</p></div>
+  <a href="{{ url_for('tramite_nuevo') }}" class="btn btn-primary">+ Nuevo Trámite</a>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterTable('all',this)">Todos ({{ solicitudes|length }})</button>
+  <button class="filter-btn" onclick="filterTable('Pendiente',this)">Pendiente</button>
+  <button class="filter-btn" onclick="filterTable('En Revisión',this)">En Revisión</button>
+  <button class="filter-btn" onclick="filterTable('Aprobado',this)">Aprobado</button>
+  <button class="filter-btn" onclick="filterTable('Rechazado',this)">Rechazado</button>
+  <div class="filter-search">
+    <input type="text" class="search-input-sm" placeholder="🔍 Buscar..." oninput="searchTable(this.value)"/>
+  </div>
+</div>
+
+<div class="section-card">
+  <div class="table-wrap">
+    <table class="data-table" id="solTable">
+      <thead>
+        <tr>
+          <th>Expediente</th><th>Tipo</th><th>Ciudadano</th><th>Fecha</th>
+          <th>Estado</th><th>Monto</th><th>Pago</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in solicitudes %}
+        <tr data-estado="{{ s.estado }}">
+          <td><code>{{ s.id }}</code></td>
+          <td>{{ s.tipo }}</td>
+          <td>{{ s.ciudadano }}</td>
+          <td>{{ s.fecha }}</td>
+          <td><span class="badge badge-{{ s.estado|lower|replace(' ','-') }}">{{ s.estado }}</span></td>
+          <td>Q {{ "%.2f"|format(s.monto) }}</td>
+          <td>
+            {% if s.pagado %}
+              <span class="badge badge-aprobado">✓ Pagado</span>
+            {% elif s.estado == 'Aprobado' %}
+              <span class="badge badge-pendiente">⏳ Pendiente</span>
+            {% else %}
+              <span style="color:var(--text-3);font-size:12px">—</span>
+            {% endif %}
+          </td>
+          <td class="actions-cell">
+            <a href="{{ url_for('expediente_detalle', exp_id=s.id) }}" class="btn btn-xs btn-outline">Ver</a>
+            {% if not s.pagado and s.estado == 'Aprobado' %}
+              <a href="{{ url_for('pagos') }}" class="btn btn-xs btn-primary">Pagar</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="empty-row">No tienes solicitudes aún. <a href="{{ url_for('tramite_nuevo') }}">Crear una</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function filterTable(e, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#solTable tbody tr').forEach(r => {
+    r.style.display = (e === 'all' || r.dataset.estado === e) ? '' : 'none';
+  });
+}
+function searchTable(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#solTable tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Iniciar Sesión – SGM{% endblock %}
+{% block auth_content %}
+<div class="login-page">
+  <div class="login-left">
+    <div class="login-left-content">
+      <div class="login-logo">🏛️</div>
+      <h1 class="login-brand">SGM</h1>
+      <p class="login-brand-sub">Sistema de Gestión Municipal</p>
+      <p class="login-brand-desc">Municipalidad de Guatemala</p>
+      <div class="login-features">
+        <div class="login-feat"><span>✓</span> Trámites 100% en línea</div>
+        <div class="login-feat"><span>✓</span> Seguimiento en tiempo real</div>
+        <div class="login-feat"><span>✓</span> Pagos seguros integrados</div>
+        <div class="login-feat"><span>✓</span> Disponible 24/7</div>
+      </div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-card">
+      <h2 class="login-title">Bienvenido</h2>
+      <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+      {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+      <form method="POST" action="{{ url_for('login') }}" class="login-form">
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <div class="input-icon-wrap"><span class="input-icon">✉</span><input type="email" name="email" class="form-input" placeholder="correo@ejemplo.com" required/></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <div class="input-icon-wrap"><span class="input-icon">🔒</span><input type="password" name="password" id="pwdInput" class="form-input" placeholder="••••••••" required/><button type="button" class="pwd-toggle" onclick="togglePwd()">👁</button></div>
+        </div>
+        <div class="login-options">
+          <label class="checkbox-label"><input type="checkbox" name="remember"/> Recordarme</label>
+          <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+      </form>
+      <div class="login-demo">
+        <p class="demo-title">Usuarios de prueba:</p>
+        <div class="demo-grid">
+          <button class="demo-btn" onclick="fillDemo('ciudadano@gmail.com','1234')">👤 Ciudadano</button>
+          <button class="demo-btn" onclick="fillDemo('funcionario@muni.gt','1234')">🏢 Funcionario</button>
+          <button class="demo-btn" onclick="fillDemo('admin@muni.gt','1234')">⚙️ Administrador</button>
+          <button class="demo-btn" onclick="fillDemo('director@muni.gt','1234')">🎯 Director</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function fillDemo(e,p){document.querySelector('input[name=email]').value=e;document.querySelector('input[name=password]').value=p}
+function togglePwd(){const i=document.getElementById('pwdInput');i.type=i.type==='password'?'text':'password'}
+</script>
+{% endblock %}

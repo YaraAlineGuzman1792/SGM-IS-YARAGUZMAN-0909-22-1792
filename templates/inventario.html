@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Inventario – SGM{% endblock %}
+{% block page_title %}Inventario Municipal{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Inventario de Bienes Municipales</h1><p class="page-sub">Control y ubicación de activos institucionales</p></div><button class="btn btn-primary" onclick="document.getElementById('modalInv').style.display='flex'">+ Registrar Bien</button></div>
+<div class="kpi-grid">
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">🗄️</div><div class="kpi-info"><span class="kpi-value">{{ items|length }}</span><span class="kpi-label">Categorías</span></div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">✅</div><div class="kpi-info"><span class="kpi-value">{{ items|selectattr('estado','eq','Activo')|list|length }}</span><span class="kpi-label">Activos</span></div></div>
+  <div class="kpi-card kpi-orange"><div class="kpi-icon">🔧</div><div class="kpi-info"><span class="kpi-value">{{ items|selectattr('estado','eq','Mantenimiento')|list|length }}</span><span class="kpi-label">En Mantenimiento</span></div></div>
+  <div class="kpi-card kpi-purple"><div class="kpi-icon">📦</div><div class="kpi-info"><span class="kpi-value">{{ items|sum(attribute='cantidad') }}</span><span class="kpi-label">Total Unidades</span></div></div>
+</div>
+<div class="section-card">
+  <div class="section-card-header"><h3>Registro de Inventario</h3><input type="text" class="search-input-sm" placeholder="🔍 Buscar..." oninput="searchInv(this.value)"/></div>
+  <div class="table-wrap">
+    <table class="data-table" id="invTable">
+      <thead><tr><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Ubicación</th><th>Estado</th><th>Responsable</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for i in items %}
+        <tr><td><code>{{ i.id }}</code></td><td>{{ i.descripcion }}</td><td>{{ i.cantidad }}</td><td>{{ i.ubicacion }}</td>
+          <td><span class="badge {% if i.estado == 'Activo' %}badge-aprobado{% else %}badge-en-revisión{% endif %}">{{ i.estado }}</span></td>
+          <td>{{ i.responsable }}</td>
+          <td class="actions-cell"><button class="btn btn-xs btn-outline" onclick="showToast('✏️ Editando...','success')">Editar</button><button class="btn btn-xs btn-danger" onclick="showToast('🗑️ Eliminado','danger')">Eliminar</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-overlay" id="modalInv" style="display:none">
+  <div class="modal-box">
+    <h3>Registrar Nuevo Bien</h3>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Descripción</label><input class="form-input" placeholder="Nombre del bien"/></div>
+      <div class="form-group"><label class="form-label">Cantidad</label><input type="number" class="form-input" placeholder="1"/></div>
+      <div class="form-group"><label class="form-label">Ubicación</label><input class="form-input" placeholder="Departamento o bodega"/></div>
+      <div class="form-group"><label class="form-label">Responsable</label><input class="form-input" placeholder="Nombre del responsable"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="document.getElementById('modalInv').style.display='none'">Cancelar</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modalInv').style.display='none';showToast('✅ Bien registrado','success')">Guardar</button>
+    </div>
+  </div>
+</div>
+<script>function searchInv(q){q=q.toLowerCase();document.querySelectorAll('#invTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':' none'})}</script>
+{% endblock %}

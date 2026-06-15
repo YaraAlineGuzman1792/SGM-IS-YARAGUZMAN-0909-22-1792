@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Reportes – SGM{% endblock %}
+{% block page_title %}Reportes{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Reportes de Gestión Municipal</h1><p class="page-sub">Genera y exporta reportes del sistema</p></div></div>
+<div class="section-card">
+  <h3 class="section-card-title">Filtros</h3>
+  <div class="filter-form">
+    <div class="form-group"><label class="form-label">Período</label><select class="form-input"><option>Junio 2026</option><option>Mayo 2026</option><option>Abril 2026</option></select></div>
+    <div class="form-group"><label class="form-label">Tipo de Trámite</label><select class="form-input"><option>Todos</option><option>Licencia de Construcción</option><option>Constancia de Vecindad</option></select></div>
+    <div class="form-group"><label class="form-label">Estado</label><select class="form-input"><option>Todos</option><option>Pendiente</option><option>Aprobado</option><option>Rechazado</option></select></div>
+    <div class="filter-actions">
+      <button class="btn btn-primary" onclick="showToast('📊 Reporte actualizado','success')">Aplicar</button>
+      <button class="btn btn-outline" onclick="showToast('⬇️ Descargando PDF...','success')">📄 PDF</button>
+      <button class="btn btn-outline" onclick="showToast('⬇️ Descargando Excel...','success')">📊 Excel</button>
+    </div>
+  </div>
+</div>
+<div class="kpi-grid">
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">📋</div><div class="kpi-info"><span class="kpi-value">{{ kpi.tramites_mes }}</span><span class="kpi-label">Total Trámites</span></div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">✅</div><div class="kpi-info"><span class="kpi-value">{{ kpi.aprobados_mes }}</span><span class="kpi-label">Aprobados</span></div></div>
+  <div class="kpi-card kpi-orange"><div class="kpi-icon">❌</div><div class="kpi-info"><span class="kpi-value">{{ kpi.rechazados_mes }}</span><span class="kpi-label">Rechazados</span></div></div>
+  <div class="kpi-card kpi-gold"><div class="kpi-icon">💰</div><div class="kpi-info"><span class="kpi-value">Q {{ "{:,.0f}".format(kpi.ingresos_mes) }}</span><span class="kpi-label">Ingresos</span></div></div>
+</div>
+<div class="charts-row">
+  <div class="chart-card"><h4 class="chart-title">Trámites por Estado</h4><canvas id="rptEstados" height="240"></canvas></div>
+  <div class="chart-card chart-wide"><h4 class="chart-title">Trámites por Tipo</h4><canvas id="rptTipos" height="240"></canvas></div>
+</div>
+<div class="section-card">
+  <div class="section-card-header"><h3>Detalle de Expedientes</h3></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Tipo</th><th>Ciudadano</th><th>Fecha</th><th>Estado</th><th>Monto</th><th>Pago</th></tr></thead>
+      <tbody>
+        {% for s in solicitudes %}
+        <tr><td><code>{{ s.id }}</code></td><td>{{ s.tipo }}</td><td>{{ s.ciudadano }}</td><td>{{ s.fecha }}</td><td><span class="badge badge-{{ s.estado|lower|replace(' ','-') }}">{{ s.estado }}</span></td><td>Q {{ "%.2f"|format(s.monto) }}</td><td>{% if s.pagado %}<span class="badge badge-aprobado">Pagado</span>{% else %}<span class="badge badge-rechazado">Pendiente</span>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+fetch('/api/solicitudes-por-estado').then(r=>r.json()).then(d=>{new Chart(document.getElementById('rptEstados'),{type:'pie',data:{labels:d.labels,datasets:[{data:d.data,backgroundColor:['#ED7D31','#2E75B6','#70AD47','#FF4444']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}})});
+fetch('/api/solicitudes-por-tipo').then(r=>r.json()).then(d=>{new Chart(document.getElementById('rptTipos'),{type:'bar',data:{labels:d.labels,datasets:[{label:'Trámites',data:d.data,backgroundColor:'#2E75B6',borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{maxRotation:30,font:{size:10}}}}}})});
+</script>
+{% endblock %}

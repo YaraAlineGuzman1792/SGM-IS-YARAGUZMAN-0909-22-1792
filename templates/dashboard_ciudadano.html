@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – SGM{% endblock %}
+{% block page_title %}Inicio{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Bienvenida, {{ session.name.split()[0] }} 👋</h1>
+    <p class="page-sub">Aquí está el resumen de tus trámites municipales</p>
+  </div>
+  <a href="{{ url_for('tramite_nuevo') }}" class="btn btn-primary">+ Nuevo Trámite</a>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kpi-blue">
+    <div class="kpi-icon">📋</div>
+    <div class="kpi-info"><span class="kpi-value">{{ solicitudes|length }}</span><span class="kpi-label">Mis Trámites</span></div>
+  </div>
+  <div class="kpi-card kpi-green">
+    <div class="kpi-icon">✅</div>
+    <div class="kpi-info"><span class="kpi-value">{{ solicitudes|selectattr('estado','eq','Aprobado')|list|length }}</span><span class="kpi-label">Aprobados</span></div>
+  </div>
+  <div class="kpi-card kpi-orange">
+    <div class="kpi-icon">⏳</div>
+    <div class="kpi-info"><span class="kpi-value">{{ solicitudes|selectattr('estado','in',['Pendiente','En Revisión'])|list|length }}</span><span class="kpi-label">En Proceso</span></div>
+  </div>
+  <div class="kpi-card kpi-purple">
+    <div class="kpi-icon">💳</div>
+    <div class="kpi-info">
+      <span class="kpi-value">{{ solicitudes|selectattr('pagado','eq',False)|selectattr('estado','eq','Aprobado')|list|length }}</span>
+      <span class="kpi-label">Pagos Pendientes</span>
+    </div>
+  </div>
+</div>
+
+<div class="quick-actions-title">Acciones Rápidas</div>
+<div class="quick-grid">
+  <a href="{{ url_for('tramite_nuevo') }}"   class="quick-card"><div class="quick-icon">📝</div><span>Nuevo Trámite</span></a>
+  <a href="{{ url_for('mis_solicitudes') }}" class="quick-card"><div class="quick-icon">🔍</div><span>Consultar Estado</span></a>
+  <a href="{{ url_for('pagos') }}"           class="quick-card"><div class="quick-icon">💳</div><span>Pagar en Línea</span></a>
+  <a href="{{ url_for('tramites') }}"        class="quick-card"><div class="quick-icon">📋</div><span>Ver Catálogo</span></a>
+</div>
+
+<div class="section-card">
+  <div class="section-card-header">
+    <h3>Mis Solicitudes Recientes</h3>
+    <a href="{{ url_for('mis_solicitudes') }}" class="btn btn-sm btn-outline">Ver todas</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Expediente</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th>Monto</th><th>Pago</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for s in solicitudes %}
+        <tr>
+          <td><code>{{ s.id }}</code></td>
+          <td>{{ s.tipo }}</td>
+          <td>{{ s.fecha }}</td>
+          <td><span class="badge badge-{{ s.estado|lower|replace(' ','-') }}">{{ s.estado }}</span></td>
+          <td>Q {{ "%.2f"|format(s.monto) }}</td>
+          <td>
+            {% if s.pagado %}
+              <span class="badge badge-aprobado">✓ Pagado</span>
+            {% elif s.estado == 'Aprobado' %}
+              <span class="badge badge-pendiente">⏳ Pendiente</span>
+            {% else %}
+              <span style="color:var(--text-3);font-size:12px">—</span>
+            {% endif %}
+          </td>
+          <td class="actions-cell">
+            <a href="{{ url_for('expediente_detalle', exp_id=s.id) }}" class="btn btn-xs btn-outline">Ver</a>
+            {% if not s.pagado and s.estado == 'Aprobado' %}
+              <a href="{{ url_for('pagos') }}" class="btn btn-xs btn-primary">Pagar</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty-row">No tienes solicitudes. <a href="{{ url_for('tramite_nuevo') }}">Crear una</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

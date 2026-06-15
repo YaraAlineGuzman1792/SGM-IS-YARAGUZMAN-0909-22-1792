@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Catálogo de Trámites – SGM{% endblock %}
+{% block page_title %}Trámites Disponibles{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Catálogo de Trámites</h1><p class="page-sub">Selecciona el trámite que deseas iniciar</p></div></div>
+<div class="search-bar-wrap"><span class="search-icon">🔍</span><input type="text" id="searchTramites" class="search-input" placeholder="Buscar trámite..."/></div>
+<div class="tramites-grid" id="tramitesGrid">
+  {% for t in tipos %}
+  <div class="tramite-card" data-nombre="{{ t.nombre|lower }}">
+    <div class="tramite-icon">{{ t.icono }}</div>
+    <h3 class="tramite-nombre">{{ t.nombre }}</h3>
+    <div class="tramite-meta">
+      <div class="tramite-meta-item"><span class="meta-icon">💰</span> Q {{ "%.2f"|format(t.costo) }}</div>
+      <div class="tramite-meta-item"><span class="meta-icon">⏱️</span> {{ t.dias }} días hábiles</div>
+    </div>
+    <a href="{{ url_for('tramite_nuevo',tipo=t.id) }}" class="btn btn-primary btn-block">Iniciar Trámite</a>
+  </div>
+  {% endfor %}
+</div>
+<script>document.getElementById('searchTramites').addEventListener('input',function(){const q=this.value.toLowerCase();document.querySelectorAll('.tramite-card').forEach(c=>{c.style.display=c.dataset.nombre.includes(q)?'':' none'})});</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Auditoría – SGM{% endblock %}
+{% block page_title %}Bitácora de Auditoría{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Bitácora de Auditoría</h1><p class="page-sub">Registro de todas las acciones críticas del sistema</p></div><button class="btn btn-outline" onclick="showToast('⬇️ Exportando bitácora...','success')">📄 Exportar</button></div>
+<div class="kpi-grid">
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">📝</div><div class="kpi-info"><span class="kpi-value">{{ logs|length }}</span><span class="kpi-label">Registros Hoy</span></div></div>
+  <div class="kpi-card kpi-orange"><div class="kpi-icon">👥</div><div class="kpi-info"><span class="kpi-value">4</span><span class="kpi-label">Usuarios Activos</span></div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">✅</div><div class="kpi-info"><span class="kpi-value">100%</span><span class="kpi-label">Cobertura</span></div></div>
+  <div class="kpi-card kpi-purple"><div class="kpi-icon">🛡️</div><div class="kpi-info"><span class="kpi-value">0</span><span class="kpi-label">Alertas de Seg.</span></div></div>
+</div>
+<div class="section-card">
+  <div class="section-card-header"><h3>Registro de Actividad</h3><input class="search-input-sm" placeholder="🔍 Buscar..." oninput="buscar(this.value)"/></div>
+  <div class="table-wrap">
+    <table class="data-table" id="auditTable">
+      <thead><tr><th>#</th><th>Usuario</th><th>Acción</th><th>Tabla Afectada</th><th>Fecha y Hora</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr><td>{{ log.id }}</td><td>{{ log.usuario }}</td><td>{{ log.accion }}</td><td><code>{{ log.tabla }}</code></td><td>{{ log.fecha }}</td><td><code>{{ log.ip }}</code></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>function buscar(q){q=q.toLowerCase();document.querySelectorAll('#auditTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':' none'})}</script>
+{% endblock %}

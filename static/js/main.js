@@ -1,0 +1,4 @@
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
+document.addEventListener('click',function(e){const s=document.getElementById('sidebar'),t=document.querySelector('.topbar-toggle');if(s&&!s.contains(e.target)&&t&&!t.contains(e.target))s.classList.remove('open')});
+function showToast(msg,type='success'){let c=document.querySelector('.toast-container');if(!c){c=document.createElement('div');c.className='toast-container';document.body.appendChild(c)}const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(120%)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300)},3000)}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.style.display='none'}));

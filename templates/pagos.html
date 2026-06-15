@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Pagos en Línea – SGM{% endblock %}
+{% block page_title %}Pagos en Línea{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-title">Pagos en Línea</h1><p class="page-sub">Paga los trámites que han sido aprobados</p></div>
+</div>
+
+{% if pendientes %}
+<div class="pay-layout">
+  <div class="pay-main">
+    <div class="section-card">
+      <h3 class="section-card-title">Trámites Aprobados – Pendientes de Pago</h3>
+      <div class="pay-list">
+        {% for s in pendientes %}
+        <label class="pay-item" for="exp_{{ loop.index }}">
+          <input type="radio" name="sel" id="exp_{{ loop.index }}" value="{{ s.id }}"
+            {% if loop.first %}checked{% endif %}
+            onchange="updatePayment('{{ s.id }}', {{ s.monto }}, '{{ s.tipo }}')"/>
+          <div class="pay-item-content">
+            <div class="pay-item-left"><code>{{ s.id }}</code><span class="pay-tipo">{{ s.tipo }}</span></div>
+            <div class="pay-item-right"><span class="pay-monto">Q {{ "%.2f"|format(s.monto) }}</span><span class="badge badge-aprobado">Aprobado</span></div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3 class="section-card-title">💳 Datos de Pago</h3>
+      <div class="ssl-badge">🔒 Conexión segura SSL/TLS 1.3</div>
+      <form method="POST" action="{{ url_for('pagos') }}" onsubmit="return validarPago()">
+        <input type="hidden" name="expediente_id" id="hiddenExpId" value="{{ pendientes[0].id }}"/>
+        <div class="pay-methods">
+          <label class="pay-method-btn active" for="visa"><input type="radio" name="metodo" id="visa" value="visa" checked/><span>💳 Visa</span></label>
+          <label class="pay-method-btn" for="mc"><input type="radio" name="metodo" id="mc" value="mastercard"/><span>💳 Mastercard</span></label>
+          <label class="pay-method-btn" for="wallet"><input type="radio" name="metodo" id="wallet" value="billetera"/><span>📱 Billetera</span></label>
+        </div>
+        <div class="form-grid">
+          <div class="form-group form-full"><label class="form-label">Número de Tarjeta *</label><input type="text" name="card_num" class="form-input" placeholder="0000  0000  0000  0000" maxlength="19" oninput="formatCard(this)" required/></div>
+          <div class="form-group"><label class="form-label">Nombre en la Tarjeta *</label><input type="text" name="card_name" class="form-input" placeholder="Como aparece en la tarjeta" required/></div>
+          <div class="form-group"><label class="form-label">Vencimiento *</label><input type="text" name="card_exp" class="form-input" placeholder="MM/AA" maxlength="5" oninput="formatExp(this)" required/></div>
+          <div class="form-group"><label class="form-label">CVV *</label><input type="password" name="card_cvv" class="form-input" placeholder="•••" maxlength="4" required/></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Pagar Q <span id="payTotal">{{ "%.2f"|format(pendientes[0].monto) }}</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="pay-sidebar">
+    <div class="summary-card">
+      <h4>Resumen de Pago</h4>
+      <div class="summary-row"><span>Expediente:</span><strong id="sumExp">{{ pendientes[0].id }}</strong></div>
+      <div class="summary-row"><span>Trámite:</span><strong id="sumTipo">{{ pendientes[0].tipo }}</strong></div>
+      <hr/>
+      <div class="summary-row"><span>Subtotal:</span><strong id="sumSub">Q {{ "%.2f"|format(pendientes[0].monto) }}</strong></div>
+      <div class="summary-row"><span>IVA (0%):</span><strong>Q 0.00</strong></div>
+      <div class="summary-total">Total: <strong id="sumTotalSidebar">Q {{ "%.2f"|format(pendientes[0].monto) }}</strong></div>
+    </div>
+    <div class="security-card"><p>🛡️ Datos protegidos con cifrado AES-256.</p><p>🏦 Procesado por Visa/Mastercard Guatemala.</p></div>
+  </div>
+</div>
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">✅</div>
+  <h3>¡Sin pagos pendientes!</h3>
+  <p>Todos tus trámites aprobados están al día, o aún no tienes trámites aprobados.</p>
+  <a href="{{ url_for('tramites') }}" class="btn btn-primary">Iniciar nuevo trámite</a>
+</div>
+{% endif %}
+
+<script>
+function updatePayment(id, monto, tipo) {
+  document.getElementById('hiddenExpId').value = id;
+  document.getElementById('sumExp').textContent = id;
+  document.getElementById('sumTipo').textContent = tipo;
+  document.getElementById('sumSub').textContent = 'Q ' + monto.toFixed(2);
+  document.getElementById('sumTotalSidebar').textContent = 'Q ' + monto.toFixed(2);
+  document.getElementById('payTotal').textContent = monto.toFixed(2);
+}
+function formatCard(i) { let v=i.value.replace(/\D/g,'').substring(0,16); i.value=v.replace(/(.{4})/g,'$1  ').trim(); }
+function formatExp(i) { let v=i.value.replace(/\D/g,''); if(v.length>=2) v=v.substring(0,2)+'/'+v.substring(2,4); i.value=v; }
+function validarPago() {
+  const id = document.getElementById('hiddenExpId').value;
+  if (!id) { alert('Selecciona un expediente'); return false; }
+  return true;
+}
+document.querySelectorAll('.pay-method-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+{% endblock %}

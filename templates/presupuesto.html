@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Presupuesto – SGM{% endblock %}
+{% block page_title %}Gestión de Presupuesto{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1 class="page-title">Presupuesto Municipal 2026</h1><p class="page-sub">Control de ejecución presupuestal por partida</p></div><button class="btn btn-primary" onclick="showToast('⬇️ Exportando...','success')">📊 Exportar</button></div>
+{% set total_asig = partidas|sum(attribute='asignado') %}
+{% set total_ejec = partidas|sum(attribute='ejecutado') %}
+{% set pct_global = ((total_ejec / total_asig) * 100)|round(1) %}
+<div class="kpi-grid">
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">📊</div><div class="kpi-info"><span class="kpi-value">Q {{ "{:,.0f}".format(total_asig) }}</span><span class="kpi-label">Presupuesto Total</span></div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">✅</div><div class="kpi-info"><span class="kpi-value">Q {{ "{:,.0f}".format(total_ejec) }}</span><span class="kpi-label">Ejecutado</span></div></div>
+  <div class="kpi-card kpi-orange"><div class="kpi-icon">💰</div><div class="kpi-info"><span class="kpi-value">Q {{ "{:,.0f}".format(total_asig - total_ejec) }}</span><span class="kpi-label">Disponible</span></div></div>
+  <div class="kpi-card kpi-purple"><div class="kpi-icon">📈</div><div class="kpi-info"><span class="kpi-value">{{ pct_global }}%</span><span class="kpi-label">% Ejecución</span></div></div>
+</div>
+<div class="charts-row">
+  <div class="chart-card chart-wide"><h4 class="chart-title">Ejecución por Partida</h4><canvas id="chartPresupuesto" height="200"></canvas></div>
+</div>
+<div class="section-card">
+  <div class="section-card-header"><h3>Detalle por Partida</h3></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Partida</th><th>Asignado (Q)</th><th>Ejecutado (Q)</th><th>Disponible (Q)</th><th>% Ejecución</th><th>Estado</th></tr></thead>
+      <tbody>
+        {% for p in partidas %}
+        <tr>
+          <td>{{ p.partida }}</td><td>{{ "{:,}".format(p.asignado) }}</td><td>{{ "{:,}".format(p.ejecutado) }}</td><td>{{ "{:,}".format(p.asignado - p.ejecutado) }}</td>
+          <td><div class="inline-bar"><div class="inline-bar-fill" style="width:{{ p.pct }}%;background:{% if p.pct > 80 %}var(--danger){% elif p.pct > 60 %}var(--warning){% else %}var(--success){% endif %}"></div></div><span class="{% if p.pct > 80 %}text-danger{% endif %}">{{ p.pct }}%</span></td>
+          <td>{% if p.pct > 80 %}<span class="badge badge-rechazado">⚠️ Alerta</span>{% elif p.pct > 60 %}<span class="badge badge-en-revisión">Normal</span>{% else %}<span class="badge badge-aprobado">OK</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const labels={{ partidas|map(attribute='partida')|list|tojson }};
+const asig={{ partidas|map(attribute='asignado')|list|tojson }};
+const ejec={{ partidas|map(attribute='ejecutado')|list|tojson }};
+new Chart(document.getElementById('chartPresupuesto'),{type:'bar',data:{labels:labels,datasets:[{label:'Asignado',data:asig,backgroundColor:'rgba(46,117,182,0.3)',borderColor:'#2E75B6',borderWidth:1,borderRadius:4},{label:'Ejecutado',data:ejec,backgroundColor:'rgba(112,173,71,0.7)',borderColor:'#70AD47',borderWidth:1,borderRadius:4}]},options:{responsive:true,scales:{x:{ticks:{maxRotation:20,font:{size:10}}},y:{ticks:{callback:v=>'Q '+v.toLocaleString()}}}}});
+</script>
+{% endblock %}

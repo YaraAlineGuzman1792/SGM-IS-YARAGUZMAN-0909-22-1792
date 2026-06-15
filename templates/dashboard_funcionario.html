@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}Panel Funcionario – SGM{% endblock %}
+{% block page_title %}Mis Expedientes{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Panel de Trabajo</h1>
+    <p class="page-sub">Expedientes pendientes de revisión y resolución</p>
+  </div>
+</div>
+
+<!-- KPI Cards clickeables -->
+<div class="kpi-grid">
+  <div class="kpi-card kpi-orange kpi-clickable" onclick="filtrarPor('Pendiente')" id="kpi-Pendiente">
+    <div class="kpi-icon">⏳</div>
+    <div class="kpi-info">
+      <span class="kpi-value">{{ solicitudes|selectattr('estado','eq','Pendiente')|list|length }}</span>
+      <span class="kpi-label">Pendientes</span>
+    </div>
+    <div class="kpi-arrow">→</div>
+  </div>
+  <div class="kpi-card kpi-blue kpi-clickable" onclick="filtrarPor('En Revisión')" id="kpi-En Revisión">
+    <div class="kpi-icon">🔄</div>
+    <div class="kpi-info">
+      <span class="kpi-value">{{ solicitudes|selectattr('estado','eq','En Revisión')|list|length }}</span>
+      <span class="kpi-label">En Revisión</span>
+    </div>
+    <div class="kpi-arrow">→</div>
+  </div>
+  <div class="kpi-card kpi-green kpi-clickable" onclick="filtrarPor('Aprobado')" id="kpi-Aprobado">
+    <div class="kpi-icon">✅</div>
+    <div class="kpi-info">
+      <span class="kpi-value">{{ solicitudes|selectattr('estado','eq','Aprobado')|list|length }}</span>
+      <span class="kpi-label">Aprobados</span>
+    </div>
+    <div class="kpi-arrow">→</div>
+  </div>
+  <div class="kpi-card kpi-purple kpi-clickable" onclick="filtrarPor('Rechazado')" id="kpi-Rechazado">
+    <div class="kpi-icon">❌</div>
+    <div class="kpi-info">
+      <span class="kpi-value">{{ solicitudes|selectattr('estado','eq','Rechazado')|list|length }}</span>
+      <span class="kpi-label">Rechazados</span>
+    </div>
+    <div class="kpi-arrow">→</div>
+  </div>
+</div>
+
+<!-- Filtros tipo pill (igual que mis solicitudes) -->
+<div class="filter-bar" id="filtroBar">
+  <button class="filter-btn active" onclick="filtrarPor('all', this)">
+    Todos ({{ solicitudes|length }})
+  </button>
+  <button class="filter-btn" id="btn-Pendiente" onclick="filtrarPor('Pendiente', this)">
+    Pendiente ({{ solicitudes|selectattr('estado','eq','Pendiente')|list|length }})
+  </button>
+  <button class="filter-btn" id="btn-En Revisión" onclick="filtrarPor('En Revisión', this)">
+    En Revisión ({{ solicitudes|selectattr('estado','eq','En Revisión')|list|length }})
+  </button>
+  <button class="filter-btn" id="btn-Aprobado" onclick="filtrarPor('Aprobado', this)">
+    Aprobado ({{ solicitudes|selectattr('estado','eq','Aprobado')|list|length }})
+  </button>
+  <button class="filter-btn" id="btn-Rechazado" onclick="filtrarPor('Rechazado', this)">
+    Rechazado ({{ solicitudes|selectattr('estado','eq','Rechazado')|list|length }})
+  </button>
+  <div class="filter-search">
+    <input type="text" class="search-input-sm" placeholder="🔍 Buscar expediente..."
+           oninput="buscarTabla(this.value)"/>
+  </div>
+</div>
+
+<!-- Título dinámico del bloque -->
+<div class="section-card">
+  <div class="section-card-header">
+    <h3 id="tituloTabla">Todos los Expedientes</h3>
+    <span class="badge badge-pendiente" id="contadorTabla">{{ solicitudes|length }} expedientes</span>
+  </div>
+
+  {% if solicitudes %}
+  <div class="table-wrap">
+    <table class="data-table" id="expTable">
+      <thead>
+        <tr>
+          <th>Expediente</th><th>Tipo</th><th>Ciudadano</th>
+          <th>Fecha</th><th>Estado</th><th>Monto</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in solicitudes %}
+        <tr data-estado="{{ s.estado }}">
+          <td><code>{{ s.id }}</code></td>
+          <td>{{ s.tipo }}</td>
+          <td>{{ s.ciudadano }}</td>
+          <td>{{ s.fecha }}</td>
+          <td><span class="badge badge-{{ s.estado|lower|replace(' ','-') }}">{{ s.estado }}</span></td>
+          <td>Q {{ "%.2f"|format(s.monto) }}</td>
+          <td class="actions-cell">
+            {% if s.estado in ['Pendiente', 'En Revisión'] %}
+              <button class="btn btn-xs btn-success"
+                      onclick="abrirModal('{{ s.id }}','aprobar','{{ s.tipo }}','{{ s.ciudadano }}')">
+                ✓ Aprobar
+              </button>
+              <button class="btn btn-xs btn-danger"
+                      onclick="abrirModal('{{ s.id }}','rechazar','{{ s.tipo }}','{{ s.ciudadano }}')">
+                ✗ Rechazar
+              </button>
+            {% elif s.estado == 'Aprobado' %}
+              <span class="badge badge-aprobado">✓ Resuelto</span>
+              {% if s.resolucion %}
+              <button class="btn btn-xs btn-outline"
+                      onclick="verResolucion('{{ s.resolucion }}')">Ver resolución</button>
+              {% endif %}
+            {% elif s.estado == 'Rechazado' %}
+              <span class="badge badge-rechazado">✗ Rechazado</span>
+              {% if s.resolucion %}
+              <button class="btn btn-xs btn-outline"
+                      onclick="verResolucion('{{ s.resolucion }}')">Ver motivo</button>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🎉</div>
+    <h3>¡Sin expedientes pendientes!</h3>
+    <p>No hay expedientes en espera de revisión.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal resolución (POST real) -->
+<div class="modal-overlay" id="modalAccion" style="display:none">
+  <div class="modal-box">
+    <h3 id="modalTitle">Resolución del Expediente</h3>
+    <p id="modalDesc" class="modal-sub"></p>
+    <form method="POST" action="{{ url_for('funcionario_accion') }}">
+      <input type="hidden" name="exp_id"  id="inputExpId"/>
+      <input type="hidden" name="accion"  id="inputAccion"/>
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">Observaciones / Resolución *</label>
+        <textarea name="observacion" class="form-input" rows="4"
+                  placeholder="Ingrese la resolución detallada o motivo de rechazo..."
+                  required></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="modalConfirmBtn">Confirmar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal ver resolución -->
+<div class="modal-overlay" id="modalResolucion" style="display:none">
+  <div class="modal-box">
+    <h3>Resolución emitida</h3>
+    <p id="textoResolucion" style="font-size:14px;color:var(--text);line-height:1.7;margin:16px 0;"></p>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="document.getElementById('modalResolucion').style.display='none'">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Filtro por estado ──────────────────────────────────────────────────────────
+const titulos = {
+  'all':         'Todos los Expedientes',
+  'Pendiente':   'Expedientes Pendientes',
+  'En Revisión': 'Expedientes En Revisión',
+  'Aprobado':    'Expedientes Aprobados',
+  'Rechazado':   'Expedientes Rechazados',
+};
+
+function filtrarPor(estado, btnEl) {
+  // Activar filtro pill
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+
+  let btn = btnEl;
+  if (!btnEl) {
+    // Llamado desde KPI card
+    btn = document.getElementById('btn-' + estado);
+  }
+  if (btn) btn.classList.add('active');
+
+  // Filtrar filas
+  const filas = document.querySelectorAll('#expTable tbody tr');
+  let count = 0;
+  filas.forEach(r => {
+    const mostrar = estado === 'all' || r.dataset.estado === estado;
+    r.style.display = mostrar ? '' : 'none';
+    if (mostrar) count++;
+  });
+
+  // Actualizar título y contador
+  document.getElementById('tituloTabla').textContent  = titulos[estado] || 'Expedientes';
+  document.getElementById('contadorTabla').textContent = count + ' expediente' + (count !== 1 ? 's' : '');
+
+  // Resaltar KPI activa
+  document.querySelectorAll('.kpi-card').forEach(k => k.classList.remove('kpi-active'));
+  if (estado !== 'all') {
+    const kpiEl = document.getElementById('kpi-' + estado);
+    if (kpiEl) kpiEl.classList.add('kpi-active');
+  }
+
+  // Scroll suave a la tabla
+  document.getElementById('filtroBar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Búsqueda ──────────────────────────────────────────────────────────────────
+function buscarTabla(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#expTable tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── Modal aprobar / rechazar ──────────────────────────────────────────────────
+function abrirModal(id, accion, tipo, ciudadano) {
+  document.getElementById('inputExpId').value  = id;
+  document.getElementById('inputAccion').value = accion;
+  document.getElementById('modalTitle').textContent =
+    accion === 'aprobar' ? '✅ Aprobar Expediente' : '❌ Rechazar Expediente';
+  document.getElementById('modalDesc').textContent =
+    id + ' – ' + tipo + ' (' + ciudadano + ')';
+  const btn = document.getElementById('modalConfirmBtn');
+  btn.className   = 'btn ' + (accion === 'aprobar' ? 'btn-success' : 'btn-danger');
+  btn.textContent = accion === 'aprobar' ? 'Confirmar Aprobación' : 'Confirmar Rechazo';
+  document.getElementById('modalAccion').style.display = 'flex';
+}
+
+function cerrarModal() {
+  document.getElementById('modalAccion').style.display = 'none';
+}
+
+// ── Modal ver resolución ──────────────────────────────────────────────────────
+function verResolucion(texto) {
+  document.getElementById('textoResolucion').textContent = texto;
+  document.getElementById('modalResolucion').style.display = 'flex';
+}
+</script>
+{% endblock %}
