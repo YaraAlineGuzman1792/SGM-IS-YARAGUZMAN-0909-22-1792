@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
 import os
 
-# Rutas absolutas para que Vercel encuentre templates y static
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(
