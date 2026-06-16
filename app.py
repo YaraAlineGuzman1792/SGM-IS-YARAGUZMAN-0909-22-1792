@@ -1,15 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
-import os
 import uuid
-template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
-app = Flask(__name__, template_folder=template_dir)
 
-app = Flask(__name__)
+import os
+
+app = Flask(__name__,
+            template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
+            static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.secret_key = "sgm-municipalidad-guatemala-2026"
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=False, port=5000)
 
 # ── Datos en memoria (persisten durante la sesión del servidor) ────────────────
 USERS = {
