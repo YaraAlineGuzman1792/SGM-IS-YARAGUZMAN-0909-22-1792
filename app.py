@@ -1,16 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
-import uuid
-
 import os
 
-app = Flask(__name__,
-            template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
-            static_folder=os.path.join(os.path.dirname(__file__), 'static'))
+# Rutas absolutas para que Vercel encuentre templates y static
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 app.secret_key = "sgm-municipalidad-guatemala-2026"
 
-if __name__ == "__main__":
-    app.run(debug=False, port=5000)
 
 # ── Datos en memoria (persisten durante la sesión del servidor) ────────────────
 USERS = {
@@ -298,7 +299,7 @@ def api_ingresos():
     return jsonify({"labels":["Ene","Feb","Mar","Abr","May","Jun"],"data":[142000,165000,178000,155000,192000,187450]})
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=False)
 
 @app.route("/dashboard")
 def dashboard():
